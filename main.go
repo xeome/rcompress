@@ -37,7 +37,6 @@ func main() {
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sigs
-		wg.Wait()
 		fmt.Printf("Compressed %d files\n", totalFiles)
 		fmt.Printf("Total size: %d KB\n", totalSize)
 		fmt.Printf("Total compressed size: %d KB\n", totalCompressedSize)
@@ -102,7 +101,7 @@ func main() {
 
 			_, err = db.Exec("INSERT INTO files (hash, path) VALUES (?, ?)", hashAfter, absPath)
 			if err != nil {
-				log.Warnf("Warning: %s already exists in database", path)
+				log.Warnf("Error inserting into database: %q", err)
 			}
 
 			totalSize += info.Size() / 1024
