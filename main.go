@@ -7,10 +7,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path/filepath"
 	"sync"
-	"syscall"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -41,7 +39,7 @@ func walkRecursive(processedFiles int64, totalSize int64, totalCompressedSize in
 	semaphore := make(chan struct{}, *maxconcur)
 	defer close(semaphore)
 
-	handleSignals(&processedFiles, &totalSize, &totalCompressedSize)
+	handleSignals(&processedFiles, &totalSize, &totalCompressedSize) // non-blocking
 	err := filepath.Walk(*compressdir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -78,63 +76,45 @@ func walkRecursive(processedFiles int64, totalSize int64, totalCompressedSize in
 	wg.Wait()
 }
 
-func handleSignals(processedFiles, totalSize, totalCompressedSize *int64) {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		sig := <-sigs
-		log.Infof("Received signal %s, exiting...", sig)
-		printStats(*processedFiles, *totalSize, *totalCompressedSize)
-		os.Exit(0)
-	}()
-}
-
 func processFile(absPath string, db *sql.DB, totalSize, totalCompressedSize, processedFiles *int64, info os.FileInfo) {
-	data, err := os.ReadFile(absPath)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	hashBefore := fmt.Sprintf("%x", sha256.Sum256(data))
-
-	if isAlreadyCompressed(db, hashBefore, absPath) {
+	if isAlreadyCompressed(db, absPath) {
 		return
 	}
 
 	cmd := exec.Command("oxipng", "-t", "4", "--fast", "-o", "max", "--strip", "safe", "--preserve", "-q", absPath)
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		log.Errorf("Error running oxipng: %q", err)
 		return
 	}
 
-	dataAfter, err := os.ReadFile(absPath)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	hashAfter := fmt.Sprintf("%x", sha256.Sum256(dataAfter))
+	addFileToDB(db, absPath)
+	updateStats(absPath, totalSize, totalCompressedSize, info)
+	*processedFiles++
+}
 
-	_, err = db.Exec("INSERT INTO files (hash, path) VALUES (?, ?)", hashAfter, absPath)
-	if err != nil {
-		log.Warnf("Error inserting into database: %q", err)
-	}
+func updateStats(path string, totalSize, totalCompressedSize *int64, infoBefore os.FileInfo) {
+	*totalSize += infoBefore.Size() / 1024
 
-	*totalSize += info.Size() / 1024
-
-	info, err = os.Stat(absPath)
+	infoAfter, err := os.Stat(path)
 	if err != nil {
 		log.Errorf("Error getting file info: %q", err)
 		return
 	}
 
-	*totalCompressedSize += info.Size() / 1024
-	*processedFiles++
+	*totalCompressedSize += infoAfter.Size() / 1024
 }
 
-func isAlreadyCompressed(db *sql.DB, hashBefore string, path string) bool {
-	row := db.QueryRow("SELECT * FROM files WHERE hash = ?", hashBefore)
+func isAlreadyCompressed(db *sql.DB, path string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		log.Errorf("Error reading file: %q", err)
+		return false
+	}
+
+	hash := fmt.Sprintf("%x", sha256.Sum256(data))
+
+	row := db.QueryRow("SELECT * FROM files WHERE hash = ?", hash)
 	var dummy string
 	if row.Scan(&dummy, &dummy) != sql.ErrNoRows {
 		log.Infof("Skipping %s", path)
