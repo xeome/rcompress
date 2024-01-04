@@ -9,25 +9,20 @@ import (
 )
 
 type Config struct {
-	dbpath      string
-	compressdir string
-	maxconcur   int
-	human       bool
+	Dbpath      string
+	Compressdir string
+	Maxconcur   int
+	Human       bool
 }
 
 func (c *Config) setDefaults() {
-	c.dbpath = "./oxipng.db"
-	c.compressdir = "."
-	c.maxconcur = 8
-	c.human = false
+	c.Dbpath = "./oxipng.db"
+	c.Compressdir = "."
+	c.Maxconcur = 8
+	c.Human = false
 }
 
 func (c *Config) Parse() {
-	dbPath := flag.String("dbPath", "./oxipng.db", "Path to the database")
-	compressDir := flag.String("compressDir", ".", "Directory to compress")
-	maxConcur := flag.Int("maxConcur", 8, "Maximum concurrency")
-	human := flag.Bool("human", false, "Human readable format")
-
 	exePath, err := os.Executable()
 	if err != nil {
 		log.Fatalf("Error finding executable path: %q", err)
@@ -40,24 +35,19 @@ func (c *Config) Parse() {
 		if err != nil {
 			log.Fatalf("Error reading config file: %q", err)
 		}
-
 		err = toml.Unmarshal(data, &c)
 		if err != nil {
 			log.Fatalf("Error parsing config file: %q", err)
 		}
+	} else {
+		c.setDefaults()
 	}
-	flag.Parse()
 
-	if *dbPath != "./oxipng.db" {
-		c.dbpath = *dbPath
-	}
-	if *compressDir != "." {
-		c.compressdir = *compressDir
-	}
-	if *maxConcur != 8 {
-		c.maxconcur = *maxConcur
-	}
-	if *human {
-		c.human = *human
-	}
+	// override with CLI flags
+	flag.StringVar(&c.Dbpath, "dbpath", c.Dbpath, "Path to the database")
+	flag.StringVar(&c.Compressdir, "dir", c.Compressdir, "Directory to compress")
+	flag.IntVar(&c.Maxconcur, "maxconcur", c.Maxconcur, "Maximum concurrency")
+	flag.BoolVar(&c.Human, "human", c.Human, "Human readable format")
+
+	flag.Parse()
 }

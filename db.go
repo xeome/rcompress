@@ -8,7 +8,7 @@ import (
 )
 
 func initDB() (*sql.DB, error) {
-	DB, err := sql.Open("sqlite3", config.dbpath)
+	DB, err := sql.Open("sqlite3", config.Dbpath)
 	if err != nil {
 		return nil, err
 	}
