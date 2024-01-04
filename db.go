@@ -39,3 +39,21 @@ func addFileToDB(db *sql.DB, path string) {
 		log.Warnf("Error inserting into database: %q", err)
 	}
 }
+
+func isAlreadyCompressed(db *sql.DB, path string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		log.Errorf("Error reading file: %q", err)
+		return false
+	}
+
+	hash := fmt.Sprintf("%x", sha256.Sum256(data))
+
+	row := db.QueryRow("SELECT * FROM files WHERE hash = ?", hash)
+	var dummy string
+	if row.Scan(&dummy, &dummy) != sql.ErrNoRows {
+		log.Tracef("Skipping %s", path)
+		return true
+	}
+	return false
+}

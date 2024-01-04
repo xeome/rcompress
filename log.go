@@ -24,5 +24,5 @@ func SetupLogger() {
 	})
 
 	log.SetReportCaller(true)
-	log.SetLevel(logrus.TraceLevel)
+	log.SetLevel(logrus.InfoLevel)
 }

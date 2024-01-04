@@ -6,13 +6,13 @@ import (
 	"syscall"
 )
 
-func handleSignals(processedFiles, totalSize, totalCompressedSize *int64) {
+func handleSignals(stats *Stats) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
 		log.Infof("Received signal %s, exiting...", sig)
-		printStats(*processedFiles, *totalSize, *totalCompressedSize)
+		stats.print()
 		os.Exit(0)
 	}()
 }
