@@ -15,6 +15,7 @@ var (
 	dbPath      = flag.String("db", "./oxipng.db", "Path to database")
 	compressdir = flag.String("dir", "./", "Path to directory to compress")
 	maxconcur   = flag.Int("maxconcur", 8, "Maximum number of concurrent compressions")
+	human       = flag.Bool("human", false, "Print human-readable sizes")
 )
 
 func main() {
