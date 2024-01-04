@@ -1,0 +1,4 @@
+dbpath = "./oxipng.db"
+Compressdir = "."
+Maxconcur = 8
+Human = false

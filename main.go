@@ -11,16 +11,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
-	dbPath      = flag.String("db", "./oxipng.db", "Path to database")
-	compressdir = flag.String("dir", "./", "Path to directory to compress")
-	maxconcur   = flag.Int("maxconcur", 8, "Maximum number of concurrent compressions")
-	human       = flag.Bool("human", false, "Print human-readable sizes")
-)
+var config Config
 
 func main() {
-	flag.Parse()
 	SetupLogger()
+	config.Parse()
+	flag.Parse()
+
 	db, err := initDB()
 	if err != nil {
 		log.Fatalf("Error opening database: %q", err)
@@ -35,11 +32,11 @@ func main() {
 
 func walkRecursive(db *sql.DB, stats *Stats) {
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, *maxconcur)
+	semaphore := make(chan struct{}, config.Maxconcur)
 	defer close(semaphore)
 
 	handleSignals(stats) // non-blocking
-	err := filepath.Walk(*compressdir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(config.Compressdir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
