@@ -3,3 +3,4 @@ oxipng.db
 oxipnd.db-journal
 oxipng.db-shm
 rcompress
+static/node_modules

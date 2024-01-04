@@ -27,8 +27,7 @@ func (c *Config) Parse() {
 	if err != nil {
 		log.Fatalf("Error finding executable path: %q", err)
 	}
-	exeDir := filepath.Dir(exePath)
-	configPath := filepath.Join(exeDir, "config.toml")
+	configPath := filepath.Join(filepath.Dir(exePath), "config.toml")
 
 	if _, err := os.Stat(configPath); err == nil {
 		data, err := os.ReadFile(configPath)

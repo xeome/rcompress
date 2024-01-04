@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"flag"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,7 +15,6 @@ var config Config
 func main() {
 	SetupLogger()
 	config.Parse()
-	flag.Parse()
 
 	db, err := initDB()
 	if err != nil {
