@@ -13,11 +13,11 @@ type Stats struct {
 }
 
 func (s *Stats) print() {
-	fmt.Printf("Compressed %d files\n", s.processedFiles)
-	fmt.Printf("Total size: %d KB\n", s.totalSize)
-	fmt.Printf("Total compressed size: %d KB\n", s.totalCompressedSize)
-	fmt.Printf("Saved %d KB\n", s.totalSize-s.totalCompressedSize)
-	fmt.Printf("Reduced size by %.2f%%\n", float64(s.totalSize-s.totalCompressedSize)/float64(s.totalSize)*100)
+	fmt.Printf("%-22s %d\n", "Compressed files:", s.processedFiles)
+	fmt.Printf("%-22s %d KiB\n", "Total size:", s.totalSize)
+	fmt.Printf("%-22s %d KiB\n", "Total compressed size:", s.totalCompressedSize)
+	fmt.Printf("%-22s %d KiB\n", "Saved:", s.totalSize-s.totalCompressedSize)
+	fmt.Printf("%-22s %.2f%%\n", "Reduced size by:", float64(s.totalSize-s.totalCompressedSize)/float64(s.totalSize)*100)
 }
 
 func (s *Stats) update(path string, info os.FileInfo) {
