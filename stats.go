@@ -14,7 +14,7 @@ type Stats struct {
 
 func (s *Stats) print() {
 	// Human readable output, CLI flag -human
-	if config.Human {
+	if config.human {
 		fmt.Printf("%-22s %d\n", "Compressed files:", s.processedFiles)
 		fmt.Printf("%-22s %s\n", "Total size:", humanSize(s.totalSize))
 		fmt.Printf("%-22s %s\n", "Total compressed size:", humanSize(s.totalCompressedSize))

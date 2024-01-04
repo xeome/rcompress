@@ -3,22 +3,23 @@ package main
 import (
 	"flag"
 	"os"
+	"path/filepath"
 
 	"github.com/pelletier/go-toml/v2"
 )
 
 type Config struct {
-	DbPath      string
-	Compressdir string
-	Maxconcur   int
-	Human       bool
+	dbpath      string
+	compressdir string
+	maxconcur   int
+	human       bool
 }
 
 func (c *Config) setDefaults() {
-	c.DbPath = "./oxipng.db"
-	c.Compressdir = "."
-	c.Maxconcur = 8
-	c.Human = false
+	c.dbpath = "./oxipng.db"
+	c.compressdir = "."
+	c.maxconcur = 8
+	c.human = false
 }
 
 func (c *Config) Parse() {
@@ -27,8 +28,15 @@ func (c *Config) Parse() {
 	maxConcur := flag.Int("maxConcur", 8, "Maximum concurrency")
 	human := flag.Bool("human", false, "Human readable format")
 
-	if _, err := os.Stat("config.toml"); err == nil {
-		data, err := os.ReadFile("config.toml")
+	exePath, err := os.Executable()
+	if err != nil {
+		log.Fatalf("Error finding executable path: %q", err)
+	}
+	exeDir := filepath.Dir(exePath)
+	configPath := filepath.Join(exeDir, "config.toml")
+
+	if _, err := os.Stat(configPath); err == nil {
+		data, err := os.ReadFile(configPath)
 		if err != nil {
 			log.Fatalf("Error reading config file: %q", err)
 		}
@@ -41,15 +49,15 @@ func (c *Config) Parse() {
 	flag.Parse()
 
 	if *dbPath != "./oxipng.db" {
-		c.DbPath = *dbPath
+		c.dbpath = *dbPath
 	}
 	if *compressDir != "." {
-		c.Compressdir = *compressDir
+		c.compressdir = *compressDir
 	}
 	if *maxConcur != 8 {
-		c.Maxconcur = *maxConcur
+		c.maxconcur = *maxConcur
 	}
 	if *human {
-		c.Human = *human
+		c.human = *human
 	}
 }

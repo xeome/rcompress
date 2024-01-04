@@ -33,11 +33,11 @@ func main() {
 
 func walkRecursive(db *sql.DB, stats *Stats) {
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, config.Maxconcur)
+	semaphore := make(chan struct{}, config.maxconcur)
 	defer close(semaphore)
 
 	handleSignals(stats) // non-blocking
-	err := filepath.Walk(config.Compressdir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(config.compressdir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
