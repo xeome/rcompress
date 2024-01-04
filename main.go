@@ -15,6 +15,7 @@ var config Config
 
 func main() {
 	SetupLogger()
+	config.setDefaults()
 	config.Parse()
 	flag.Parse()
 

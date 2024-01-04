@@ -14,36 +14,42 @@ type Config struct {
 	Human       bool
 }
 
+func (c *Config) setDefaults() {
+	c.DbPath = "./oxipng.db"
+	c.Compressdir = "."
+	c.Maxconcur = 8
+	c.Human = false
+}
+
 func (c *Config) Parse() {
-	dbPath := flag.String("dbPath", "", "Path to the database")
-	compressDir := flag.String("compressDir", "", "Directory to compress")
-	maxConcur := flag.Int("maxConcur", 0, "Maximum concurrency")
+	dbPath := flag.String("dbPath", "./oxipng.db", "Path to the database")
+	compressDir := flag.String("compressDir", ".", "Directory to compress")
+	maxConcur := flag.Int("maxConcur", 8, "Maximum concurrency")
 	human := flag.Bool("human", false, "Human readable format")
 
-	data, err := os.ReadFile("config.toml")
-	checkError(err, "reading config file")
+	if _, err := os.Stat("config.toml"); err == nil {
+		data, err := os.ReadFile("config.toml")
+		if err != nil {
+			log.Fatalf("Error reading config file: %q", err)
+		}
 
-	err = toml.Unmarshal(data, &c)
-	checkError(err, "parsing config file")
-
+		err = toml.Unmarshal(data, &c)
+		if err != nil {
+			log.Fatalf("Error parsing config file: %q", err)
+		}
+	}
 	flag.Parse()
 
-	if *dbPath != "" {
+	if *dbPath != "./oxipng.db" {
 		c.DbPath = *dbPath
 	}
-	if *compressDir != "" {
+	if *compressDir != "." {
 		c.Compressdir = *compressDir
 	}
-	if *maxConcur != 0 {
+	if *maxConcur != 8 {
 		c.Maxconcur = *maxConcur
 	}
 	if *human {
 		c.Human = *human
-	}
-}
-func checkError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("Error %s: %q", msg, err)
-		os.Exit(1)
 	}
 }
