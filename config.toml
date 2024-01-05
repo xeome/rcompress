@@ -1,4 +1,4 @@
-dbpath = "./oxipng.db"
+dbpath = "/home/xeome/.cache/oxipng.db"
 Compressdir = "."
 Maxconcur = 8
 Human = false

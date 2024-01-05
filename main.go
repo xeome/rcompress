@@ -77,7 +77,7 @@ func processFile(absPath string, db *sql.DB, stats *Stats, info os.FileInfo) {
 	cmd := exec.Command("oxipng", "-t", "4", "--fast", "-o", "max", "--strip", "safe", "--preserve", "-q", absPath)
 	err := cmd.Run()
 	if err != nil {
-		log.Errorf("Error running oxipng: %q", err)
+		log.Errorf("Error when running oxipng on %s: %q", absPath, err)
 		return
 	}
 

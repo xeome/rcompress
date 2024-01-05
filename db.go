@@ -22,6 +22,16 @@ func initDB() (*sql.DB, error) {
 		return nil, err
 	}
 
+	_, err = DB.Exec("PRAGMA cache_size = -8192")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = DB.Exec("PRAGMA journal_mode = WAL")
+	if err != nil {
+		return nil, err
+	}
+
 	return DB, nil
 }
 
@@ -36,7 +46,7 @@ func addFileToDB(db *sql.DB, path string) {
 
 	_, err = db.Exec("INSERT INTO files (hash, path) VALUES (?, ?)", hash, path)
 	if err != nil {
-		log.Warnf("Error inserting into database: %q", err)
+		log.Warnf("Error inserting file %s into database: %q", path, err)
 	}
 }
 
@@ -49,11 +59,16 @@ func isAlreadyCompressed(db *sql.DB, path string) bool {
 
 	hash := fmt.Sprintf("%x", sha256.Sum256(data))
 
-	row := db.QueryRow("SELECT * FROM files WHERE hash = ?", hash)
-	var dummy string
-	if row.Scan(&dummy, &dummy) != sql.ErrNoRows {
-		log.Tracef("Skipping %s", path)
-		return true
+	row := db.QueryRow("SELECT hash FROM files WHERE hash = ?", hash)
+	var retrievedHash string
+	err = row.Scan(&retrievedHash)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false
+		}
+		log.Errorf("Error scanning row: %q", err)
+		return false
 	}
-	return false
+	log.Tracef("Skipping %s", path)
+	return true
 }

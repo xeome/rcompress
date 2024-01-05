@@ -1,6 +1,7 @@
 Pictures
 oxipng.db
-oxipnd.db-journal
+oxipng.db-journal
 oxipng.db-shm
+oxipng.db-wal
 rcompress
 static/node_modules
